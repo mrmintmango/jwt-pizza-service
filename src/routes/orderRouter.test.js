@@ -96,7 +96,7 @@ test('fail to add menu item as non-admin', async () => {
     description: 'Should not be added',
     image: 'http://example.com/unauth-pizza.jpg'
   };
-    const response = await request(app)
+    await request(app)
     .put('/api/order/menu')
     .set('Authorization', `Bearer ${testUserAuthToken}`)
     .send(newItem)
@@ -109,7 +109,6 @@ test('get user orders', async () => {
     .get('/api/order/menu').expect(200);
     const menu = menuRes.body;
     expect(menu.length).toBeGreaterThan(0);
-    const menuItem = menu[0];
 
   const response = await request(app)
     .get('/api/order')

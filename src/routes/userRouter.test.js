@@ -5,9 +5,7 @@ const { Role, DB } = require('../database/database.js');
 const testUser = { name: 'pizza diner', email: 'reg@test.com', password: 'toomanysecrets' };
 const testAdmin = { name: 'pizza admin', email: 'admin@test.com', password: 'toomanysecrets' };
 let testUserAuthToken;
-let testAdminAuthToken;
-let testFranchise;
-let testStore;
+//let testAdminAuthToken;
 
 beforeAll(async () => {
   // Create unique emails
@@ -24,8 +22,8 @@ beforeAll(async () => {
   const createdAdmin = await DB.addUser(adminUser);
   testAdmin.id = createdAdmin.id;
   
-  const adminLoginRes = await request(app).put('/api/auth').send(testAdmin);
-  testAdminAuthToken = adminLoginRes.body.token;
+  //const adminLoginRes = await request(app).put('/api/auth').send(testAdmin);
+  //testAdminAuthToken = adminLoginRes.body.token;
 });
 
 
