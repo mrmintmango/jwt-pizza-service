@@ -59,7 +59,7 @@ test('get user franchises', async () => {
 
 test('fail to get user franchises without auth', async () => {
   const response = await request(app)
-    .get(`/api/franchise/${testUser.id}`);
+  .get(`/api/franchise/${testUser.id}`);
 
   expect(response.status).toBe(401);
 });
