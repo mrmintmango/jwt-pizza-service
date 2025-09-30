@@ -55,6 +55,7 @@ class DB {
     }
   }
 
+  
   async getUser(email, password) {
     const connection = await this.getConnection();
     try {
