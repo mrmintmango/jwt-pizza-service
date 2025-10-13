@@ -66,6 +66,31 @@ test('list users', async () => {
   expect(listUsersRes.status).toBe(200);
 });
 
+test('delete user', async () => {
+  // Create a user specifically for deletion
+  const [user, userToken] = await registerUser(request(app));
+  
+  // Verify user exists first
+  const getUserRes = await request(app)
+    .get('/api/user/me')
+    .set('Authorization', `Bearer ${userToken}`);
+  expect(getUserRes.status).toBe(200);
+  
+  // Now delete the user
+  const deleteRes = await request(app)
+    .delete(`/api/user/${user.id}`)
+    .set('Authorization', `Bearer ${userToken}`)
+    .expect(200);
+    
+  expect(deleteRes.body).toHaveProperty('message', 'User deleted');
+  
+  // Verify user is actually deleted by trying to access /me again
+  const verifyDeleteRes = await request(app)
+    .get('/api/user/me')
+    .set('Authorization', `Bearer ${userToken}`);
+  expect(verifyDeleteRes.status).toBe(401); // Should be unauthorized now
+});
+
 async function registerUser(service) {
   const testUser = {
     name: 'pizza diner',
