@@ -54,7 +54,14 @@ userRouter.get(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
-    res.json({});
+    //pagination variables
+    const page = parseInt(req.query.page) || 0;
+    const limit = parseInt(req.query.limit) || 10;
+    const nameFilter = req.query.name || '*';
+
+    const result = await DB.listUsers(req.user, page, limit, nameFilter);
+
+    res.json( result );
   })
 );
 

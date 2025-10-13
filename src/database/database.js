@@ -76,6 +76,54 @@ class DB {
     }
   }
 
+async listUsers(authUser, page = 0, limit = 10, nameFilter = '*') {
+  const connection = await this.getConnection();
+  
+  const offset = page * limit;
+  nameFilter = nameFilter.replace(/\*/g, '%');
+  
+  if (authUser?.isRole(Role.Admin)) {
+    try {
+      // Get users with email included in the query
+      let users = await this.query(connection, 
+        `SELECT id, name, email FROM user WHERE name LIKE ? LIMIT ${limit + 1} OFFSET ${offset}`, 
+        [nameFilter]
+      );
+
+      const more = users.length > limit;
+      if (more) {
+        users = users.slice(0, limit);
+      }
+
+      // Get roles for each user
+      for (const user of users) {
+        const roleResult = await this.query(connection, 
+          `SELECT role, objectId FROM userRole WHERE userId = ?`, 
+          [user.id]
+        );
+        user.roles = roleResult.map((r) => {
+          return { objectId: r.objectId || undefined, role: r.role };
+        });
+      }
+
+      // Return object structure that matches your userRouter expectation
+      return {
+        users: users,
+        more: more,
+        page: page,
+        limit: limit,
+        total: users.length + (more ? 1 : 0) // Approximate total
+      };
+      
+    } finally {
+      connection.end();
+    }
+  } else {
+    connection.end();
+    throw new StatusCodeError('unauthorized', 403);
+  }
+}
+
   async updateUser(userId, name, email, password) {
     const connection = await this.getConnection();
     try {

@@ -22,8 +22,8 @@ beforeAll(async () => {
   const createdAdmin = await DB.addUser(adminUser);
   testAdmin.id = createdAdmin.id;
   
-  //const adminLoginRes = await request(app).put('/api/auth').send(testAdmin);
-  //testAdminAuthToken = adminLoginRes.body.token;
+  const adminLoginRes = await request(app).put('/api/auth').send(testAdmin);
+  testAdminAuthToken = adminLoginRes.body.token;
 });
 
 
@@ -59,11 +59,50 @@ test('list users unauthorized', async () => {
 });
 
 test('list users', async () => {
-  const [user, userToken] = await registerUser(request(app));
   const listUsersRes = await request(app)
-    .get('/api/user')
-    .set('Authorization', 'Bearer ' + userToken);
+    .get('/api/user?page=1&limit=10&name=*')
+    .set('Authorization', 'Bearer ' + testAdminAuthToken);
   expect(listUsersRes.status).toBe(200);
+  
+  // Check pagination structure
+  expect(listUsersRes.body).toHaveProperty('users');
+  expect(listUsersRes.body).toHaveProperty('more');
+  expect(listUsersRes.body).toHaveProperty('page');
+  expect(listUsersRes.body).toHaveProperty('limit');
+  expect(listUsersRes.body).toHaveProperty('total');
+  
+  // Check that users is an array
+  expect(Array.isArray(listUsersRes.body.users)).toBe(true);
+  
+  // Check pagination parameters
+  expect(listUsersRes.body.page).toBe(1);
+  expect(listUsersRes.body.limit).toBe(10);
+  expect(typeof listUsersRes.body.total).toBe('number');
+  expect(typeof listUsersRes.body.more).toBe('boolean');
+});
+
+test('list users with pagination parameters', async () => {
+  const listUsersRes = await request(app)
+    .get('/api/user?page=0&limit=5')
+    .set('Authorization', 'Bearer ' + testAdminAuthToken);
+  expect(listUsersRes.status).toBe(200);
+  
+  expect(listUsersRes.body.page).toBe(0);
+  expect(listUsersRes.body.limit).toBe(5);
+  expect(listUsersRes.body.users.length).toBeLessThanOrEqual(5);
+});
+
+test('list users with name filter', async () => {
+  const listUsersRes = await request(app)
+    .get('/api/user?name=pizza')
+    .set('Authorization', 'Bearer ' + testAdminAuthToken);
+  expect(listUsersRes.status).toBe(200);
+  
+  expect(Array.isArray(listUsersRes.body.users)).toBe(true);
+  // All returned users should have 'pizza' in their name
+  listUsersRes.body.users.forEach(user => {
+    expect(user.name.toLowerCase()).toContain('pizza');
+  });
 });
 
 test('delete user', async () => {
