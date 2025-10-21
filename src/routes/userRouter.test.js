@@ -5,7 +5,7 @@ const { Role, DB } = require('../database/database.js');
 const testUser = { name: 'pizza diner', email: 'reg@test.com', password: 'toomanysecrets' };
 const testAdmin = { name: 'pizza admin', email: 'admin@test.com', password: 'toomanysecrets' };
 let testUserAuthToken;
-//let testAdminAuthToken;
+let testAdminAuthToken;
 
 beforeAll(async () => {
   // Create unique emails
