@@ -159,6 +159,10 @@ const { DB, Role } = require('./database.js');
     
     // Test logout
     await DB.logoutUser(token);
+    
+    // Add a small delay to ensure the delete is committed
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     const isLoggedInAfterLogout = await DB.isLoggedIn(token);
     expect(isLoggedInAfterLogout).toBe(false);
   });
