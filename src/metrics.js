@@ -392,7 +392,7 @@ function sendMetricToGrafana(metrics) {
       if (!response.ok) {
         console.error(`Failed to push metrics to Grafana: HTTP status ${response.status}`);
       } else {
-        console.log(`✓ Successfully pushed ${metrics.length} metrics to Grafana`);
+        //console.log(`✓ Successfully pushed ${metrics.length} metrics to Grafana`);
       }
     })
     .catch((error) => {
@@ -451,7 +451,7 @@ function pushMetricsToGrafana() {
 
 // Start periodic metric pushing (every 5 seconds)
 function startMetricsPushing(intervalMs = 5000) {
-  console.log(`📊 Starting metrics push to Grafana every ${intervalMs/1000}s`);
+  // console.log(`📊 Starting metrics push to Grafana every ${intervalMs/1000}s`);
   setInterval(() => {
     pushMetricsToGrafana();
   }, intervalMs);
