@@ -76,7 +76,7 @@ class Logger {
     // Sanitize authorization tokens
     logData = logData.replace(/\\"authorization\\":\s*\\"Bearer [^"]*\\"/g, '\\"authorization\\": \\"Bearer *****\\"');
     logData = logData.replace(/"authorization":\s*"Bearer [^"]*"/g, '"authorization": "Bearer *****"');
-    logData = logData.replace(/Bearer\s+[A-Za-z0-9\-._~+\/]+=*/g, 'Bearer *****');
+    logData = logData.replace(/Bearer\s+[A-Za-z0-9\-._~+/]+=*/g, 'Bearer *****');
     // Sanitize JWT tokens
     logData = logData.replace(/\\"token\\":\s*\\"[^"]*\\"/g, '\\"token\\": \\"*****\\"');
     logData = logData.replace(/"token":\s*"[^"]*"/g, '"token": "*****"');
