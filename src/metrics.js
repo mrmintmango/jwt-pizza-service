@@ -13,8 +13,8 @@ class MetricsCollector {
         DELETE: 0,
       },
       
-      // Active users (unique users in current session)
-      activeUsers: new Set(),
+      // Active users (unique users in current session) - Map of userId to last activity timestamp
+      activeUsers: new Map(),
       
       // Authentication metrics
       authAttempts: {
@@ -55,7 +55,7 @@ class MetricsCollector {
   // Active Users
   addActiveUser(userId) {
     if (userId) {
-      this.metrics.activeUsers.add(userId);
+      this.metrics.activeUsers.set(userId, Date.now());
     }
   }
 
@@ -65,7 +65,21 @@ class MetricsCollector {
     }
   }
 
+  // Clean up inactive users (no activity in last 5 minutes)
+  cleanupInactiveUsers() {
+    const now = Date.now();
+    const fiveMinutesAgo = now - 300000; // 5 minutes
+    
+    for (const [userId, lastActivity] of this.metrics.activeUsers.entries()) {
+      if (lastActivity < fiveMinutesAgo) {
+        this.metrics.activeUsers.delete(userId);
+      }
+    }
+  }
+
   getActiveUserCount() {
+    // Clean up inactive users before counting
+    this.cleanupInactiveUsers();
     return this.metrics.activeUsers.size;
   }
 
@@ -217,6 +231,9 @@ class MetricsCollector {
       this.metrics.pizzasSoldLastMinute.filter(e => e.timestamp > oneMinuteAgo);
     this.metrics.pizzaRevenueLastMinute = 
       this.metrics.pizzaRevenueLastMinute.filter(e => e.timestamp > oneMinuteAgo);
+    
+    // Clean inactive users
+    this.cleanupInactiveUsers();
   }
 
   // System metrics
@@ -269,7 +286,7 @@ class MetricsCollector {
     this.metrics = {
       totalRequests: 0,
       requestsByMethod: { GET: 0, PUT: 0, POST: 0, DELETE: 0 },
-      activeUsers: new Set(),
+      activeUsers: new Map(),
       authAttempts: {
         successful: 0,
         failed: 0,

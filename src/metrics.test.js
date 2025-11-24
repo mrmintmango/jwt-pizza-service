@@ -58,6 +58,51 @@ test('auth success and failure are recorded and counted per minute', () => {
     dateNowSpy.mockRestore();
 });
 
+test('active users are cleaned up after 5 minutes of inactivity', () => {
+    const dateNowSpy = jest.spyOn(Date, 'now');
+    const base = 1_000_000;
+    dateNowSpy.mockImplementation(() => base);
+
+    // Add active user
+    metrics.addActiveUser('alice');
+    expect(metrics.getActiveUserCount()).toBe(1);
+
+    // 4 minutes later - still active
+    dateNowSpy.mockImplementation(() => base + 240_000);
+    expect(metrics.getActiveUserCount()).toBe(1);
+
+    // 6 minutes later - should be cleaned up
+    dateNowSpy.mockImplementation(() => base + 360_000);
+    expect(metrics.getActiveUserCount()).toBe(0);
+
+    dateNowSpy.mockRestore();
+});
+
+test('active users timestamp is updated on activity', () => {
+    const dateNowSpy = jest.spyOn(Date, 'now');
+    const base = 1_000_000;
+    dateNowSpy.mockImplementation(() => base);
+
+    // Add active user
+    metrics.addActiveUser('alice');
+    expect(metrics.getActiveUserCount()).toBe(1);
+
+    // 4 minutes later - update activity
+    dateNowSpy.mockImplementation(() => base + 240_000);
+    metrics.addActiveUser('alice');
+    expect(metrics.getActiveUserCount()).toBe(1);
+
+    // 4 more minutes (8 total, but only 4 since last activity) - still active
+    dateNowSpy.mockImplementation(() => base + 480_000);
+    expect(metrics.getActiveUserCount()).toBe(1);
+
+    // 6 minutes after last activity - should be cleaned up
+    dateNowSpy.mockImplementation(() => base + 600_000);
+    expect(metrics.getActiveUserCount()).toBe(0);
+
+    dateNowSpy.mockRestore();
+});
+
 test('pizza sales and revenue per minute are tracked', () => {
     const dateNowSpy = jest.spyOn(Date, 'now');
     const base = 2_000_000;
