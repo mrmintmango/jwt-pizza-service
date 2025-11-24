@@ -12,7 +12,6 @@ class MetricsCollector {
         POST: 0,
         DELETE: 0,
       },
-      requestDurations: [],
       
       // Active users (unique users in current session)
       activeUsers: new Set(),
@@ -50,18 +49,6 @@ class MetricsCollector {
     const upperMethod = method.toUpperCase();
     if (this.metrics.requestsByMethod[upperMethod] !== undefined) {
       this.metrics.requestsByMethod[upperMethod]++;
-    }
-  }
-
-  recordRequestDuration(duration) {
-    this.metrics.requestDurations.push({
-      duration,
-      timestamp: Date.now(),
-    });
-    
-    // Keep only last 1000 entries
-    if (this.metrics.requestDurations.length > 1000) {
-      this.metrics.requestDurations.shift();
     }
   }
 
@@ -252,9 +239,6 @@ class MetricsCollector {
       http: {
         totalRequests: this.metrics.totalRequests,
         requestsByMethod: { ...this.metrics.requestsByMethod },
-        averageRequestDuration: this.metrics.requestDurations.length > 0
-          ? this.metrics.requestDurations.reduce((sum, e) => sum + e.duration, 0) / this.metrics.requestDurations.length
-          : 0,
       },
       users: {
         activeUsers: this.getActiveUserCount(),
@@ -285,7 +269,6 @@ class MetricsCollector {
     this.metrics = {
       totalRequests: 0,
       requestsByMethod: { GET: 0, PUT: 0, POST: 0, DELETE: 0 },
-      requestDurations: [],
       activeUsers: new Set(),
       authAttempts: {
         successful: 0,
@@ -320,11 +303,9 @@ function metricsMiddleware(req, res, next) {
     metrics.addActiveUser(req.user.id);
   }
   
-  // Track response
+  // Track response for endpoint latency only
   res.on('finish', () => {
     const duration = Date.now() - startTime;
-    metrics.recordRequestDuration(duration);
-    
     // Record endpoint latency
     const endpoint = req.route ? req.route.path : req.path;
     metrics.recordEndpointLatency(endpoint, req.method, duration);
@@ -405,13 +386,12 @@ function pushMetricsToGrafana() {
   const allMetrics = metrics.getAllMetrics();
   const metricsList = [];
   
-  // HTTP Metrics
+  // HTTP Metrics - raw counts only, Grafana will calculate rate
   metricsList.push(createMetric('http_requests_total', allMetrics.http.totalRequests, 'requests', 'sum', 'asInt', {}));
   metricsList.push(createMetric('http_requests_get', allMetrics.http.requestsByMethod.GET, 'requests', 'sum', 'asInt', {}));
   metricsList.push(createMetric('http_requests_post', allMetrics.http.requestsByMethod.POST, 'requests', 'sum', 'asInt', {}));
   metricsList.push(createMetric('http_requests_put', allMetrics.http.requestsByMethod.PUT, 'requests', 'sum', 'asInt', {}));
   metricsList.push(createMetric('http_requests_delete', allMetrics.http.requestsByMethod.DELETE, 'requests', 'sum', 'asInt', {}));
-  metricsList.push(createMetric('http_request_duration_avg', allMetrics.http.averageRequestDuration, 'ms', 'gauge', 'asDouble', {}));
   
   // User Metrics
   metricsList.push(createMetric('active_users', allMetrics.users.activeUsers, 'users', 'gauge', 'asInt', {}));
