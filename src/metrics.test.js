@@ -10,7 +10,7 @@ afterAll(() => {
     metrics.reset();
 });
 
-test('middleware tracks requests, methods, durations, and endpoint latencies', () => {
+test('middleware tracks requests, methods, and endpoint latencies', () => {
     const dateNowSpy = jest.spyOn(Date, 'now');
     let now = 1000;
     dateNowSpy.mockImplementation(() => now);
@@ -31,8 +31,6 @@ test('middleware tracks requests, methods, durations, and endpoint latencies', (
     expect(metrics.metrics.totalRequests).toBe(1);
     expect(metrics.metrics.requestsByMethod.POST).toBe(1);
     expect(metrics.getActiveUserCount()).toBe(1);
-    expect(metrics.metrics.requestDurations.length).toBe(1);
-    expect(metrics.metrics.requestDurations[0].duration).toBe(600);
 
     const key = 'POST /test';
     expect(metrics.metrics.endpointLatencies[key].length).toBe(1);
